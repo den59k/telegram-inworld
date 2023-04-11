@@ -63,6 +63,7 @@ const init = async () => {
       conversation = createConversation(ctx)
     }
     conversation.sendText("Hello! Please introduce yourself")
+    ctx.sendChatAction("typing")
   });
 
   bot.on(message("text"), async (ctx) => {
@@ -73,6 +74,7 @@ const init = async () => {
     }
     console.log(`Receive message from chatId ${ ctx.chat.id }`)
     conversation.sendText(ctx.message.text)
+    ctx.sendChatAction("typing")
   })
 
   bot.launch();
