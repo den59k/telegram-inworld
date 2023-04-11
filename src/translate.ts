@@ -35,13 +35,17 @@ const lngDetector = new LanguageDetect();
 lngDetector.setLanguageType("iso2")
 const slavLanguages = [ "bg", "mk", "sr", "mn", "uz", "uk", "kk" ]
 
+const basicLanguage = [ "en", "fr", "de", "ru" ]
+
 export const detectLocale = (str: string) => {
   const resp = lngDetector.detect(str, 4)
   if (resp.length === 0) return null
-  if (slavLanguages.includes(resp[0][0])) {
+  const locale = resp[0][0]
+  if (slavLanguages.includes(locale)) {
     return "ru"
   }
-  return resp[0][0]
+  if (!basicLanguage.includes(locale)) return "en"
+  return locale
 }
 
 export const translate = async (str: string, sourceLanguageCode = "en", targetLanguageCode = "ru") => {
