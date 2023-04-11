@@ -4,11 +4,11 @@ import { Context, Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters'
 import { InworldClient, InworldConnectionService, InworldPacket } from '@inworld/nodejs-sdk';
 
-if (!process.env.BOT_TOKEN) {
-  throw new Error("BOT_TOKEN is not defined")
+if (!process.env.TG_BOT_TOKEN) {
+  throw new Error("TG_BOT_TOKEN is not defined")
 }
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const bot = new Telegraf(process.env.TG_BOT_TOKEN);
 
 const conversations = new Map<number, InworldConnectionService>()
   
