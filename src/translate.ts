@@ -33,7 +33,7 @@ export const initTranslate = async () => {
 
 const lngDetector = new LanguageDetect();
 lngDetector.setLanguageType("iso2")
-const slavLanguages = [ "bg", "mk", "sr", "mn", "uz", "kk" ]
+const slavLanguages = [ "bg", "mk", "sr", "mn", "uz", "uk", "kk" ]
 
 export const detectLocale = (str: string) => {
   const resp = lngDetector.detect(str, 4)
