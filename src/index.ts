@@ -2,7 +2,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 import { Context, Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters'
-import { InworldClient, InworldConnectionService, InworldPacket } from '@inworld/nodejs-sdk';
+import { InworldClient, InworldConnectionService, InworldPacket, SessionToken } from '@inworld/nodejs-sdk';
+import { detectLocale, translate, initTranslate } from './translate';
 
 if (!process.env.TG_BOT_TOKEN) {
   throw new Error("TG_BOT_TOKEN is not defined")
@@ -11,7 +12,34 @@ if (!process.env.TG_BOT_TOKEN) {
 const bot = new Telegraf(process.env.TG_BOT_TOKEN);
 
 const conversations = new Map<number, InworldConnectionService>()
-  
+const sessionIds = new Map<number, string>()
+const locales = new Map<number, string>()
+
+const generateSessionToken = (chatId: number) => {
+  return async () => {
+
+    const client = new InworldClient().setApiKey({
+      key: process.env.INWORLD_KEY!,
+      secret: process.env.INWORLD_SECRET!,
+    });
+
+    const token = await client.generateSessionToken()
+
+    let sessionId = sessionIds.get(chatId)
+    if (!sessionId) {
+      sessionId = token.getSessionId()
+      sessionIds.set(chatId, sessionId)
+    } 
+    const actualToken = new SessionToken({
+      expirationTime: token.getExpirationTime(),
+      token: token.getToken(),
+      type: token.getType(),
+      sessionId
+    })
+
+    return actualToken
+  };
+};
 
 const createConversation = (ctx: Context) => {
   const client = new InworldClient()
@@ -33,12 +61,35 @@ const createConversation = (ctx: Context) => {
     console.log(`Close conversation with chatId ${ chatId }. Reason: ${ err.message }`)
     conversations.delete(chatId)
   })
+
+  client.setGenerateSessionToken(generateSessionToken(chatId))
+
+  let lastTimeAction = 0
+  let message = ""
+
+  const sendMessage = async () => {
+    let text = message.trim()
+    message = ""
+
+    const lang = locales.get(chatId) || "ru"
+    if (lang !== "en") {
+      text = await translate(text, "en", lang)
+    }
+
+    console.log(`Sended reply to chatId ${ chatId }. Lang is ${lang}`)
+    bot.telegram.sendMessage(chatId, text)
+  }
+
   client.setOnMessage((packet: InworldPacket) => {
-    if (!packet.text) {
+    if (packet.control?.type === "INTERACTION_END") {
+      sendMessage()
       return
     }
-    console.log(`Sended reply to chatId ${ chatId }`)
-    bot.telegram.sendMessage(chatId, packet.text.text.trim())
+    message += packet.text.text
+    if (Date.now() > lastTimeAction + 1000) {
+      bot.telegram.sendChatAction( chatId, "typing")
+      lastTimeAction = Date.now()
+    }
   })
   const connection = client.build()
   conversations.set(chatId, connection)
@@ -57,7 +108,10 @@ const stop = () => {
 }
 
 const init = async () => {
-  bot.start((ctx) => {
+
+  await initTranslate()
+
+  bot.start(async (ctx) => {
     let conversation = conversations.get(ctx.chat.id)
     if (!conversation) {
       conversation = createConversation(ctx)
@@ -72,9 +126,16 @@ const init = async () => {
     if (!conversation) {
       conversation = createConversation(ctx)
     }
-    console.log(`Receive message from chatId ${ ctx.chat.id }`)
-    conversation.sendText(ctx.message.text)
-    ctx.sendChatAction("typing")
+    const lang = detectLocale(ctx.message.text)
+    locales.set(ctx.chat.id, lang)
+
+    console.log(`Receive message from chatId ${ ctx.chat.id }. Lang is ${lang}`)
+
+    let text = ctx.message.text
+    if (lang !== "en") {
+      text = await translate(ctx.message.text, lang, "en")
+    }
+    conversation.sendText(text)
   })
 
   bot.launch();
