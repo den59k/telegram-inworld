@@ -37,6 +37,7 @@ const slavLanguages = [ "bg", "mk", "sr", "mn", "uz", "kk" ]
 
 export const detectLocale = (str: string) => {
   const resp = lngDetector.detect(str, 4)
+  if (resp.length === 0) return null
   if (slavLanguages.includes(resp[0][0])) {
     return "ru"
   }

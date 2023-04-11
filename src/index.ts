@@ -127,13 +127,15 @@ const init = async () => {
       conversation = createConversation(ctx)
     }
     const lang = detectLocale(ctx.message.text)
-    locales.set(ctx.chat.id, lang)
+    if (lang !== null) {
+      locales.set(ctx.chat.id, lang)
+    }
 
     console.log(`Receive message from chatId ${ ctx.chat.id }. Lang is ${lang}`)
 
     let text = ctx.message.text
     if (lang !== "en") {
-      text = await translate(ctx.message.text, lang, "en")
+      text = await translate(ctx.message.text, lang || "ru", "en")
     }
     conversation.sendText(text)
   })
