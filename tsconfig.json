@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "inlineSourceMap": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "strict": true,
+    "strictNullChecks": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "outDir": "dist",
+    "typeRoots" : [ "node_modules/@types", "./src/@types" ],
+    "rootDir": "src",
+    "lib": [ "ESNext" ]
+  },
+  "include": [ "src" ]
+}
