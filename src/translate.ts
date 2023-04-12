@@ -28,7 +28,7 @@ export const initTranslate = async () => {
     console.log("Yandex translator jwt token updated")
   }
   await updateIamToken()
-  setInterval(updateIamToken, 6 * 60 * 60 * 60 * 1000)
+  setInterval(updateIamToken, 6 * 60 * 60 * 1000)
 }
 
 const lngDetector = new LanguageDetect();
