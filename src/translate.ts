@@ -4,8 +4,15 @@ import axios from 'axios'
 import LanguageDetect from 'languagedetect'
 
 let iamToken: string
+let glossary: { [key: string]: string } = {}
 
 export const initTranslate = async () => {
+
+  if (fs.existsSync(process.cwd() + "/glossary.json")) {
+    glossary = JSON.parse(fs.readFileSync(process.cwd() + "/glossary.json", "utf-8"))
+    console.log("Glossary loaded!", glossary)
+  }
+
   const { id, private_key, service_account_id  } = JSON.parse(fs.readFileSync(process.cwd() + "/authorized_key.json", "utf-8"))
   const now = Math.floor(new Date().getTime() / 1000)
 
@@ -55,7 +62,15 @@ export const translate = async (str: string, sourceLanguageCode = "en", targetLa
       targetLanguageCode,
       texts: [
         str
-      ]
+      ],
+      glossaryConfig: Object.keys(glossary).length === 0? undefined: {
+        glossaryData: {
+          glossaryPairs: Object.entries(glossary).map(item => ({
+            sourceText: item[0],
+            translatedText: item[1]
+          }))
+        }
+      }
     }, {
       headers: { Authorization: `Bearer ${iamToken}` }
     })
