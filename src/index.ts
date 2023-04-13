@@ -71,12 +71,13 @@ const createConversation = (ctx: Context) => {
     let text = message.trim()
     message = ""
 
+    const _locale = detectLocale(text)
     const lang = locales.get(chatId) || "ru"
-    if (lang !== "en") {
-      text = await translate(text, "en", lang)
+    if (_locale !== lang && _locale !== "ru") {
+      text = await translate(text, _locale || "en", lang)
     }
 
-    console.log(`Sended reply to chatId ${ chatId }. Lang is ${lang}`)
+    console.log(`Sended reply to chatId ${ chatId }. Source lang is ${ _locale }. Target lang is ${lang}`)
     bot.telegram.sendMessage(chatId, text)
   }
 
@@ -116,7 +117,7 @@ const init = async () => {
     if (!conversation) {
       conversation = createConversation(ctx)
     }
-    conversation.sendText("Hello! Please introduce yourself")
+    conversation.sendText("Hello! Please introduce yourself. Reply in Russian as much as possible")
     ctx.sendChatAction("typing")
   });
 
